@@ -42,12 +42,12 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
 On the phone: open the app → **Grant permissions** → **Enable recorder** (turn on the
-accessibility service) → **Settings**, enter `https://your-domain` and the API key → **Test connection** → **Save**.
+accessibility service) → **Settings**, enter `https://recordings.lilliblush.com` and the API key printed by `setup-vps.sh` → **Test connection** → **Save**.
 
 ### Server certificate
 
-The app trusts the system CAs, so a Let's Encrypt certificate (as with the Caddy setup in
-`../server`) works out of the box. If you use your own CA, install it on the phone and uncomment
+The app trusts the system CAs, so the Let's Encrypt certificate that certbot gets for
+`recordings.lilliblush.com` (see `../server/README.md`) works out of the box. If you use your own CA, install it on the phone and uncomment
 `<certificates src="user" />` in `res/xml/network_security_config.xml`.
 
 ## Merging into your existing app

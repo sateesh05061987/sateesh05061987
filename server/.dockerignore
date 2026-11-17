@@ -5,5 +5,3 @@ recordings/
 **/appsettings.Development.json
 **/appsettings.Production.json
 Dockerfile
-docker-compose.yml
-Caddyfile

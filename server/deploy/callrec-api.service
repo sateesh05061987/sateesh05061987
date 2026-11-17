@@ -1,0 +1,19 @@
+[Unit]
+Description=Call recording upload API
+After=network.target mysql.service
+
+[Service]
+WorkingDirectory=/var/www/callrec/api/publish
+ExecStart=/var/www/callrec/api/publish/RecordingServer
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=ASPNETCORE_URLS=http://127.0.0.1:5025
+# Connection string, API key and storage path (written by setup-vps.sh; never committed).
+EnvironmentFile=/etc/callrec/api.env
+User=www-data
+Restart=always
+RestartSec=5
+KillSignal=SIGINT
+SyslogIdentifier=callrec-api
+
+[Install]
+WantedBy=multi-user.target

@@ -1,7 +1,20 @@
 # Recording server
 
-ASP.NET Core 8 Web API that receives call recordings from the Android app, stores the audio on
-disk (`{Storage:RootPath}/yyyy/MM/`) and the metadata in SQL Server via EF Core.
+ASP.NET Core (.NET 10) Web API that receives call recordings from the Android app. It stores the
+audio on disk (`{Storage:RootPath}/yyyy/MM/`) and the metadata in MySQL via EF Core (Pomelo).
+It runs on the **LilliBlush VPS** next to KATAVU and is set up the same way: nginx → systemd →
+self-contained build, MySQL, config in `/etc/<app>/api.env`, deployed with `deploy.sh` from Git Bash.
+
+| | KATAVU | Call recordings |
+|---|---|---|
+| Address | `katavu.lilliblush.com` | `recordings.lilliblush.com` |
+| Internal port | 127.0.0.1:5024 | 127.0.0.1:5025 |
+| systemd unit | `katavu-api` | `callrec-api` |
+| App folder | `/var/www/katavu/api/publish` | `/var/www/callrec/api/publish` |
+| Config | `/etc/katavu/api.env` | `/etc/callrec/api.env` |
+| Database | `CaneLedgerDB` | `CallRecordingsDB` (user `callrec`) |
+| **Recordings** | | **`/var/www/callrec/recordings/yyyy/MM/*.m4a`** |
+| Backups | `/var/www/katavu/backups/<ts>/` | `/var/www/callrec/backups/<ts>/` |
 
 ## API
 
@@ -21,85 +34,100 @@ Upload checks: size limit (`Storage:MaxUploadBytes`, default 200 MB, enforced at
 form reader), extension must be `.m4a`, content must start with an MP4 `ftyp` box, duplicates are
 rejected by SHA-256 (unique index, so concurrent duplicates are caught too).
 
-`Recordings` table: `Id, FileName, RelativePath, Direction, PhoneNumber, StartedAt, DurationSeconds,
+`Recordings` table (MySQL): `Id, FileName, RelativePath, Direction, PhoneNumber, StartedAt, DurationSeconds,
 AudioSource, DeviceName, SizeBytes, FileHash, UploadedAt`. `RelativePath` (where the file sits under
 the storage root) and `FileHash` (for duplicate detection) are additions to the columns you listed.
+MySQL has no offset-aware date type, so `startedAt` / `uploadedAt` are stored and returned in UTC
+(`09:30+05:30` comes back as `04:00+00:00`, the same moment).
 
 ## Configuration
 
-See `appsettings.sample.json`. Every setting can also be an environment variable
-(`Auth__ApiKey`, `ConnectionStrings__Default`, `Storage__RootPath`, ...).
+On the VPS everything comes from `/etc/callrec/api.env` (written by `setup-vps.sh`). The deployed package
+has no `appsettings*.json`, as with KATAVU. Locally, use environment variables or `appsettings.Development.json`
+(see `appsettings.sample.json`).
 
-| Key | Meaning |
+| Setting (env var) | Meaning |
 |---|---|
-| `ConnectionStrings:Default` | SQL Server connection string. |
-| `Auth:ApiKey` | Shared secret, at least 24 characters. The server refuses to start without it. Generate with `openssl rand -base64 32`. |
-| `Storage:RootPath` | Where audio files go. Relative paths are relative to the app folder. |
-| `Storage:MaxUploadBytes` | Max file size in bytes. |
-| `Database:MigrateOnStartup` | `true` applies EF migrations at startup. |
-| `UseHttpsRedirection` | `true` when Kestrel itself serves HTTPS (not needed behind a reverse proxy). |
-
-Don't commit real secrets: use environment variables, `dotnet user-secrets`, or an untracked
-`appsettings.Production.json` (it's in `.gitignore`).
+| `ConnectionStrings__Default` | MySQL connection string, e.g. `Server=127.0.0.1;port=3306;Database=CallRecordingsDB;user=callrec;password=...;` |
+| `Auth__ApiKey` | Shared secret, at least 24 characters. The server refuses to start without it. |
+| `Storage__RootPath` | Where audio files go (VPS: `/var/www/callrec/recordings`). |
+| `Storage__MaxUploadBytes` | Max file size in bytes (default 200 MB; nginx allows 210 MB). |
+| `Database__MigrateOnStartup` | `true` applies EF migrations at startup (on for the VPS). |
 
 ## Build and run locally
 
-Requires the .NET 8 SDK and a SQL Server (or `docker run -e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD='Your_Passw0rd!' -p 1433:1433 mcr.microsoft.com/mssql/server:2022-latest`).
+Requires the .NET 10 SDK and a MySQL 8 (`docker run -d -e MYSQL_ROOT_PASSWORD=pw -p 3306:3306 mysql:8.0`).
 
 ```bash
 cd server
 dotnet build
-dotnet tool restore                      # installs dotnet-ef from .config/dotnet-tools.json
+dotnet tool restore                      # dotnet-ef from .config/dotnet-tools.json
 
-export ConnectionStrings__Default='Server=localhost,1433;Database=CallRecordings;User Id=sa;Password=Your_Passw0rd!;TrustServerCertificate=True'
-export Auth__ApiKey="$(openssl rand -base64 32)"
-dotnet ef database update                # or set Database__MigrateOnStartup=true
+export ConnectionStrings__Default='Server=127.0.0.1;port=3306;Database=CallRecordingsDB;user=root;password=pw;'
+export Auth__ApiKey="$(openssl rand -hex 32)"
+export Database__MigrateOnStartup=true
 dotnet run --urls http://localhost:5080
-
 curl -H "X-Api-Key: $Auth__ApiKey" http://localhost:5080/api/ping
 ```
 
-The Android app only talks HTTPS, so for testing from a phone put it behind HTTPS (see below).
+After changing the model: `dotnet ef migrations add <Name>` (no database needed; the MySQL version is fixed
+in `AppDbContext.ServerVersion`, as in KATAVU).
 
-### Migrations
+## Deploy to the LilliBlush VPS (72.61.232.205)
 
-`Migrations/` holds `InitialCreate`. After changing the model:
+Everything runs from **Git Bash on your PC** (needs the .NET 10 SDK and SSH access as `root@72.61.232.205`,
+the same as KATAVU's `deploy.sh`). The scripts are in `deploy/`.
+
+### First time
+
+1. **DNS:** add an A record `recordings` → `72.61.232.205` for `lilliblush.com`, and wait until
+   `nslookup recordings.lilliblush.com` shows that IP.
+2. **Set up the server once:**
+   ```bash
+   cd server/deploy
+   ./setup-vps.sh
+   ```
+   This creates the folders, the MySQL database and user (with a random password), `/etc/callrec/api.env`
+   (connection string, a random API key, storage path), the `callrec-api` systemd unit and the nginx site,
+   then gets an HTTPS certificate with certbot. **It prints the API key at the end. Copy it for the phone.**
+   It doesn't touch KATAVU's files, database, service or nginx site. You can run it again safely: it keeps
+   the existing passwords and key. It stops if port 5025 is already in use.
+3. **Deploy:**
+   ```bash
+   ./publish.sh     # builds ../publish-out/callrec-api.tar.gz (self-contained linux-x64)
+   ./deploy.sh      # uploads, backs up, installs, starts, checks
+   ```
+4. **Phone:** Settings → Server URL `https://recordings.lilliblush.com`, paste the API key →
+   **Test connection** → **Save**.
+
+### Every update
 
 ```bash
-dotnet ef migrations add <Name>
-dotnet ef migrations script --idempotent -o migrate.sql   # if you prefer applying SQL by hand
+cd server/deploy && ./publish.sh && ./deploy.sh
 ```
 
-## Deploy with Docker Compose (SQL Server + API + automatic HTTPS)
+`deploy.sh` first backs up the database (`mysqldump`) and the current build to
+`/var/www/callrec/backups/<timestamp>/`. If that backup fails it stops and changes nothing. Then it swaps
+in the new build, starts it (EF migrations run on start) and checks `/healthz` (200) and `/api/ping` without
+a key (401). If the check fails it prints the log and the exact rollback command. Build copies are kept for
+the last 3 deploys and database backups are all kept. Recordings are never touched.
 
-On a Linux host with Docker, a public IP, and a DNS name pointing at it (ports 80 and 443 open):
+### On the VPS
 
 ```bash
-cd server
-cp .env.sample .env        # set DOMAIN, API_KEY, SQL_SA_PASSWORD
-docker compose up -d --build
-docker compose logs -f api
-curl -H "X-Api-Key: <API_KEY>" https://<DOMAIN>/api/ping
+systemctl status callrec-api                 # running?
+journalctl -u callrec-api -f                 # logs
+grep Auth__ApiKey /etc/callrec/api.env       # the API key again
+ls /var/www/callrec/recordings/2026/11/      # this month's recordings
+du -sh /var/www/callrec/recordings           # disk used
 ```
 
-Caddy gets a Let's Encrypt certificate for `DOMAIN` and proxies to the API, so the phone's
-system trust store accepts it with no extra setup. Audio is in the `recordings` volume, the
-database in `sqldata`. Back up both.
+To change the API key, edit `Auth__ApiKey` in `/etc/callrec/api.env`, run `systemctl restart callrec-api`,
+and enter the new key on the phone.
 
-Want only the API container (with your own SQL Server and reverse proxy)?
+Back up `/var/www/callrec/recordings` (the audio) as well as the database. `deploy.sh` only backs up the database.
 
-```bash
-docker build -t recording-server .
-docker run -d -p 8080:8080 \
-  -e ConnectionStrings__Default='...' -e Auth__ApiKey='...' -e Database__MigrateOnStartup=true \
-  -v /srv/recordings:/data/recordings recording-server
-```
+### Docker (elsewhere)
 
-If your reverse proxy (nginx, IIS, ...) has its own body-size limit, raise it to match
-`MaxUploadBytes` (nginx: `client_max_body_size 210m;`).
-
-### Without Docker (Windows/IIS or Linux service)
-
-`dotnet publish -c Release -o out`, copy `out/` to the server, set the environment variables
-above, and host it behind IIS (ASP.NET Core Hosting Bundle) or as a systemd service behind nginx,
-with a valid TLS certificate.
+The `Dockerfile` still builds a plain image if you ever want to run it somewhere other than LilliBlush:
+`docker run -p 8080:8080 -e ConnectionStrings__Default=... -e Auth__ApiKey=... -e Database__MigrateOnStartup=true -v /srv/recordings:/data/recordings <image>`.

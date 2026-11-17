@@ -9,7 +9,7 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<AppDbConte
     public AppDbContext CreateDbContext(string[] args)
     {
         var cs = Environment.GetEnvironmentVariable("ConnectionStrings__Default")
-                 ?? "Server=localhost,1433;Database=CallRecordings;Trusted_Connection=True;TrustServerCertificate=True";
-        return new AppDbContext(new DbContextOptionsBuilder<AppDbContext>().UseSqlServer(cs).Options);
+                 ?? "Server=localhost;port=3306;Database=CallRecordingsDB;user=callrec;password=design-time-only;";
+        return new AppDbContext(new DbContextOptionsBuilder<AppDbContext>().UseMySql(cs, AppDbContext.ServerVersion).Options);
     }
 }
