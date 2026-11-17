@@ -1,0 +1,5 @@
+<resources>
+    <color name="status_pending">#8A6D00</color>
+    <color name="status_uploaded">#1B7F3B</color>
+    <color name="status_failed">#B3261E</color>
+</resources>

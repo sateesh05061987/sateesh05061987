@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- HTTPS only: cleartext (http://) is refused for every host. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+            <!-- If your server uses a certificate from your own CA, install the CA on the
+                 phone and uncomment the next line (sideloaded build, so this is your call). -->
+            <!-- <certificates src="user" /> -->
+        </trust-anchors>
+    </base-config>
+</network-security-config>
