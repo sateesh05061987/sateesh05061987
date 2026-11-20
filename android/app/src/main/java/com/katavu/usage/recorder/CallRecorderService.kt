@@ -130,23 +130,34 @@ class CallRecorderService : AccessibilityService() {
         Log.e(TAG, "No audio source could be started")
     }
 
-    /** Route call audio to the loudspeaker so the mic captures the other party too. */
+    /**
+     * Route call audio to the loudspeaker so the mic captures the other party too.
+     * Uses both the modern API (setCommunicationDevice, API 31+) and the legacy one
+     * (setSpeakerphoneOn): some OEMs — e.g. Motorola — only honour the legacy call.
+     */
     private fun forceSpeaker() {
+        // Modern route (API 31+).
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                val speaker = audioManager.availableCommunicationDevices
-                    .firstOrNull { it.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER } ?: return
-                savedCommDevice = audioManager.communicationDevice
-                speakerForced = audioManager.setCommunicationDevice(speaker)
-            } else {
-                @Suppress("DEPRECATION")
-                savedSpeakerOn = audioManager.isSpeakerphoneOn
-                @Suppress("DEPRECATION")
-                audioManager.isSpeakerphoneOn = true
-                speakerForced = true
+                audioManager.availableCommunicationDevices
+                    .firstOrNull { it.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER }
+                    ?.let { speaker ->
+                        savedCommDevice = audioManager.communicationDevice
+                        if (audioManager.setCommunicationDevice(speaker)) speakerForced = true
+                    }
             }
         } catch (e: Exception) {
-            Log.w(TAG, "Could not switch to speaker: ${e.message}")
+            Log.w(TAG, "setCommunicationDevice failed: ${e.message}")
+        }
+        // Legacy route (works on OEMs that ignore the modern one).
+        try {
+            @Suppress("DEPRECATION")
+            if (savedSpeakerOn == null) savedSpeakerOn = audioManager.isSpeakerphoneOn
+            @Suppress("DEPRECATION")
+            audioManager.isSpeakerphoneOn = true
+            speakerForced = true
+        } catch (e: Exception) {
+            Log.w(TAG, "setSpeakerphoneOn failed: ${e.message}")
         }
     }
 
@@ -155,14 +166,13 @@ class CallRecorderService : AccessibilityService() {
         if (!speakerForced) return
         speakerForced = false
         try {
+            @Suppress("DEPRECATION")
+            savedSpeakerOn?.let { audioManager.isSpeakerphoneOn = it }
+            savedSpeakerOn = null
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 audioManager.clearCommunicationDevice()
                 savedCommDevice?.let { audioManager.setCommunicationDevice(it) }
                 savedCommDevice = null
-            } else {
-                @Suppress("DEPRECATION")
-                savedSpeakerOn?.let { audioManager.isSpeakerphoneOn = it }
-                savedSpeakerOn = null
             }
         } catch (e: Exception) {
             Log.w(TAG, "Could not restore audio route: ${e.message}")
