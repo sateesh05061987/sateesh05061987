@@ -50,7 +50,9 @@ if [ -f "$ENV_FILE" ]; then
 else
   echo "==> MySQL database $DB_NAME and user $DB_USER"
   command -v mysql >/dev/null || { echo "!! mysql client not found"; exit 1; }
-  DB_PASS=$(openssl rand -hex 24)
+  # Upper + lower + digit + symbol for MySQL's validate_password (MEDIUM). '-' is safe in the
+  # connection string, the env file and SQL quotes.
+  DB_PASS="Cr-$(openssl rand -hex 24)-Z9"
   # Ubuntu's MySQL lets the local root user in through the socket without a password.
   mysql <<SQL
 CREATE DATABASE IF NOT EXISTS \`$DB_NAME\` CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;

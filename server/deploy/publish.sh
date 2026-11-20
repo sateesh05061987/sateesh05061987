@@ -11,7 +11,7 @@ cd "$(dirname "$0")/.."
 OUT=publish-out
 rm -rf "$OUT/callrec-api"
 dotnet publish RecordingServer.csproj -c Release -r linux-x64 --self-contained true \
-  -o "$OUT/callrec-api" /p:UseAppHost=true
+  -o "$OUT/callrec-api" -p:UseAppHost=true   # -p:, not /p: (Git Bash rewrites /p: as a path)
 rm -f "$OUT"/callrec-api/appsettings*.json
 tar -czf "$OUT/callrec-api.tar.gz" -C "$OUT/callrec-api" .
 echo "==> $(du -h "$OUT/callrec-api.tar.gz" | cut -f1)  $(pwd)/$OUT/callrec-api.tar.gz"
