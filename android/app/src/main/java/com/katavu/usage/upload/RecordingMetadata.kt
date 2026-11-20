@@ -1,4 +1,4 @@
-package com.example.callrecorder.upload
+package com.katavu.usage.upload
 
 /** What the server needs to know about a recording besides the audio itself. */
 data class RecordingMetadata(

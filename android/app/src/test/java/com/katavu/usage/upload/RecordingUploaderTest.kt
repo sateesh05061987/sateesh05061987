@@ -1,4 +1,4 @@
-package com.example.callrecorder.upload
+package com.katavu.usage.upload
 
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.mockwebserver.MockResponse

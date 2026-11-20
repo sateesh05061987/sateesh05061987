@@ -1,11 +1,11 @@
-# Recording server
+# KATAVU Usage server
 
-ASP.NET Core (.NET 10) Web API that receives call recordings from the Android app. It stores the
+The server side of **KATAVU Usage**: an ASP.NET Core (.NET 10) Web API that receives call recordings from the Android app. It stores the
 audio on disk (`{Storage:RootPath}/yyyy/MM/`) and the metadata in MySQL via EF Core (Pomelo).
 It runs on the **LilliBlush VPS** next to KATAVU and is set up the same way: nginx → systemd →
 self-contained build, MySQL, config in `/etc/<app>/api.env`, deployed with `deploy.sh` from Git Bash.
 
-| | KATAVU | Call recordings |
+| | KATAVU | KATAVU Usage |
 |---|---|---|
 | Address | `katavu.lilliblush.com` | `recordings.lilliblush.com` |
 | Internal port | 127.0.0.1:5024 | 127.0.0.1:5025 |

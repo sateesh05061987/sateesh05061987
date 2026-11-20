@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.callrecorder"
+    namespace = "com.katavu.usage"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.callrecorder"
+        applicationId = "com.katavu.usage"
         minSdk = 26
         targetSdk = 35
         versionCode = 1

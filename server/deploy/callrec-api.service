@@ -1,5 +1,5 @@
 [Unit]
-Description=Call recording upload API
+Description=KATAVU Usage API (call recording uploads)
 After=network.target mysql.service
 
 [Service]

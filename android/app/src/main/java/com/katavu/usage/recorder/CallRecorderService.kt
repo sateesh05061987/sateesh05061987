@@ -1,4 +1,4 @@
-package com.example.callrecorder.recorder
+package com.katavu.usage.recorder
 
 import android.accessibilityservice.AccessibilityService
 import android.content.BroadcastReceiver
@@ -10,9 +10,9 @@ import android.telephony.TelephonyManager
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import androidx.core.content.ContextCompat
-import com.example.callrecorder.upload.RecordingFiles
-import com.example.callrecorder.upload.RecordingMetadata
-import com.example.callrecorder.upload.UploadScheduler
+import com.katavu.usage.upload.RecordingFiles
+import com.katavu.usage.upload.RecordingMetadata
+import com.katavu.usage.upload.UploadScheduler
 import java.io.File
 
 /**

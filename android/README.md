@@ -1,11 +1,11 @@
-# Call Recorder (Android)
+# KATAVU Usage (Android)
 
-Sideloaded call recorder (minSdk 26) that uploads every finished recording to your own server
+KATAVU Usage: a sideloaded call recorder (minSdk 26, package `com.katavu.usage`) that uploads every finished recording to your own server
 (see `../server`).
 
 > **About this project.** Your real app's code wasn't in the repository, so this is a new project
 > with a **placeholder** `CallRecorderService`. The upload feature lives in
-> `app/src/main/java/com/example/callrecorder/upload/` and needs only two calls from a recorder.
+> `app/src/main/java/com/katavu/usage/upload/` and needs only two calls from a recorder.
 > See [Merging into your existing app](#merging-into-your-existing-app).
 
 ## What it does

@@ -1,4 +1,4 @@
-package com.example.callrecorder.ui
+package com.katavu.usage.ui
 
 import android.text.format.DateUtils
 import android.view.LayoutInflater
@@ -8,11 +8,11 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.example.callrecorder.R
-import com.example.callrecorder.databinding.ItemRecordingBinding
-import com.example.callrecorder.upload.RecordingMetadata
-import com.example.callrecorder.upload.UploadEntry
-import com.example.callrecorder.upload.UploadStatus
+import com.katavu.usage.R
+import com.katavu.usage.databinding.ItemRecordingBinding
+import com.katavu.usage.upload.RecordingMetadata
+import com.katavu.usage.upload.UploadEntry
+import com.katavu.usage.upload.UploadStatus
 
 class RecordingsAdapter(
     private val onClick: (UploadEntry) -> Unit,

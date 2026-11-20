@@ -17,7 +17,7 @@
         android:label="@string/app_name"
         android:networkSecurityConfig="@xml/network_security_config"
         android:supportsRtl="true"
-        android:theme="@style/Theme.CallRecorder"
+        android:theme="@style/Theme.KatavuUsage"
         android:usesCleartextTraffic="false"
         tools:targetApi="35">
 

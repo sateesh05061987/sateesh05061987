@@ -1,4 +1,4 @@
-package com.example.callrecorder.ui
+package com.katavu.usage.ui
 
 import android.Manifest
 import android.content.Intent
@@ -14,13 +14,13 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.callrecorder.R
-import com.example.callrecorder.databinding.ActivityMainBinding
-import com.example.callrecorder.upload.UploadEntry
-import com.example.callrecorder.upload.UploadScheduler
-import com.example.callrecorder.upload.UploadSettings
-import com.example.callrecorder.upload.UploadStateStore
-import com.example.callrecorder.upload.UploadStatus
+import com.katavu.usage.R
+import com.katavu.usage.databinding.ActivityMainBinding
+import com.katavu.usage.upload.UploadEntry
+import com.katavu.usage.upload.UploadScheduler
+import com.katavu.usage.upload.UploadSettings
+import com.katavu.usage.upload.UploadStateStore
+import com.katavu.usage.upload.UploadStatus
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
 

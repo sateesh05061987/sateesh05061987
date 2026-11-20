@@ -1,14 +1,14 @@
-package com.example.callrecorder.ui
+package com.katavu.usage.ui
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
-import com.example.callrecorder.R
-import com.example.callrecorder.databinding.ActivitySettingsBinding
-import com.example.callrecorder.upload.RecordingUploader
-import com.example.callrecorder.upload.UploadScheduler
-import com.example.callrecorder.upload.UploadSettings
+import com.katavu.usage.R
+import com.katavu.usage.databinding.ActivitySettingsBinding
+import com.katavu.usage.upload.RecordingUploader
+import com.katavu.usage.upload.UploadScheduler
+import com.katavu.usage.upload.UploadSettings
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
