@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>KATAVU Usage · Recordings</title>
+<style>
+  :root {
+    --green-deep: #1e4d2b; --green: #2e7d32; --gold: #c8962e;
+    --bg: #f5f6f2; --surface: #ffffff; --text: #1d2420; --muted: #5f6b63; --border: #dfe3dc;
+    --danger: #b3261e; --danger-bg: #fdecea; --in: #1565c0; --out: #2e7d32;
+    --radius: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --green-deep: #a5d6a7; --green: #81c784; --gold: #e0b252;
+      --bg: #121512; --surface: #1c211d; --text: #e6ebe6; --muted: #9aa69d; --border: #2f3830;
+      --danger: #f2b8b5; --danger-bg: #3a1f1d; --in: #90caf9; --out: #81c784;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  button, input { font: inherit; }
+  .hidden { display: none !important; }
+
+  /* Login */
+  .login-wrap { min-height: 100vh; display: grid; place-items: center; padding: 16px; }
+  .login { width: 100%; max-width: 360px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 28px 24px; }
+  .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+  .brand-mark { width: 34px; height: 34px; border-radius: 9px; background: var(--green-deep); color: var(--bg);
+    display: grid; place-items: center; font-weight: 700; }
+  .brand h1 { font-size: 20px; margin: 0; }
+  .login p.sub { margin: 0 0 20px; color: var(--muted); }
+  label { display: block; font-size: 13px; color: var(--muted); margin: 14px 0 6px; }
+  input[type=text], input[type=password], input[type=search] {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px;
+    background: var(--bg); color: var(--text); }
+  input:focus { outline: 2px solid var(--green); outline-offset: 1px; }
+  .btn { border: 0; border-radius: 8px; padding: 10px 16px; cursor: pointer; font-weight: 600; }
+  .btn-primary { background: var(--green-deep); color: var(--bg); width: 100%; margin-top: 20px; }
+  .btn-primary:disabled { opacity: .6; cursor: default; }
+  .error { color: var(--danger); background: var(--danger-bg); border-radius: 8px; padding: 8px 12px;
+    margin-top: 14px; font-size: 14px; }
+
+  /* App */
+  header { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 2; }
+  .bar { max-width: 1000px; margin: 0 auto; padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
+  .bar .brand { margin: 0; flex: 1; min-width: 0; }
+  .user { color: var(--muted); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .btn-ghost { background: transparent; color: var(--text); border: 1px solid var(--border); padding: 7px 12px; }
+  main { max-width: 1000px; margin: 0 auto; padding: 16px; }
+  .tools { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+  .tools input { flex: 1; min-width: 180px; }
+  .count { color: var(--muted); font-size: 14px; }
+
+  .list { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .row { display: grid; grid-template-columns: 34px 1fr auto; gap: 12px; align-items: center;
+    padding: 12px 14px; border-top: 1px solid var(--border); }
+  .row:first-child { border-top: 0; }
+  .dir { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-size: 17px; font-weight: 700; }
+  .dir.in { color: var(--in); background: color-mix(in srgb, var(--in) 14%, transparent); }
+  .dir.out { color: var(--out); background: color-mix(in srgb, var(--out) 14%, transparent); }
+  .num { font-weight: 600; font-size: 16px; overflow-wrap: anywhere; }
+  .meta { color: var(--muted); font-size: 13px; display: flex; flex-wrap: wrap; gap: 4px 10px; }
+  .tag { border: 1px solid var(--border); border-radius: 999px; padding: 0 7px; font-size: 12px; }
+  .actions { display: flex; gap: 6px; }
+  .icon-btn { width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--border); background: transparent;
+    color: var(--text); cursor: pointer; display: grid; place-items: center; text-decoration: none; }
+  .icon-btn:hover { border-color: var(--green); }
+  .icon-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+  .icon-btn svg { width: 18px; height: 18px; }
+  .player { grid-column: 2 / -1; }
+  .player audio { width: 100%; height: 36px; }
+  .empty { padding: 40px 16px; text-align: center; color: var(--muted); }
+  .pager { display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 14px; color: var(--muted); }
+
+  dialog { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text);
+    padding: 22px; max-width: 360px; width: calc(100% - 32px); }
+  dialog::backdrop { background: rgb(0 0 0 / .45); }
+  dialog h2 { margin: 0 0 8px; font-size: 18px; }
+  dialog p { margin: 0 0 18px; color: var(--muted); overflow-wrap: anywhere; }
+  .dlg-actions { display: flex; justify-content: flex-end; gap: 8px; }
+  .btn-danger { background: var(--danger); color: var(--surface); }
+  .toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--text); color: var(--bg);
+    padding: 10px 16px; border-radius: 8px; font-size: 14px; z-index: 5; max-width: calc(100% - 32px); }
+
+  @media (max-width: 560px) {
+    .row { grid-template-columns: 34px 1fr; }
+    .actions { grid-column: 2; }
+    .user { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="loginView" class="login-wrap hidden">
+  <form id="loginForm" class="login" autocomplete="on">
+    <div class="brand"><div class="brand-mark">K</div><h1>KATAVU Usage</h1></div>
+    <p class="sub">Sign in to view call recordings.</p>
+    <label for="username">Username</label>
+    <input id="username" name="username" type="text" autocomplete="username" required autofocus>
+    <label for="password">Password</label>
+    <input id="password" name="password" type="password" autocomplete="current-password" required>
+    <button id="loginBtn" class="btn btn-primary" type="submit">Sign in</button>
+    <div id="loginError" class="error hidden" role="alert"></div>
+  </form>
+</div>
+
+<!-- App -->
+<div id="appView" class="hidden">
+  <header>
+    <div class="bar">
+      <div class="brand"><div class="brand-mark">K</div><h1>Recordings</h1></div>
+      <span id="userName" class="user"></span>
+      <button id="logoutBtn" class="btn btn-ghost" type="button">Sign out</button>
+    </div>
+  </header>
+  <main>
+    <div class="tools">
+      <input id="search" type="search" placeholder="Search phone number" inputmode="tel" aria-label="Search phone number">
+      <span id="count" class="count"></span>
+    </div>
+    <div id="list" class="list" aria-live="polite"></div>
+    <div id="pager" class="pager hidden">
+      <button id="prevBtn" class="btn btn-ghost" type="button">‹ Newer</button>
+      <span id="pageInfo"></span>
+      <button id="nextBtn" class="btn btn-ghost" type="button">Older ›</button>
+    </div>
+  </main>
+</div>
+
+<dialog id="confirmDlg">
+  <h2>Delete recording?</h2>
+  <p id="confirmText"></p>
+  <div class="dlg-actions">
+    <button id="cancelDel" class="btn btn-ghost" type="button">Cancel</button>
+    <button id="confirmDel" class="btn btn-danger" type="button">Delete</button>
+  </div>
+</dialog>
+
+<div id="toast" class="toast hidden" role="status"></div>
+
+<script>
+(() => {
+  const PAGE_SIZE = 50;
+  const $ = id => document.getElementById(id);
+  const state = { page: 1, total: 0, q: "" };
+
+  const icons = {
+    play: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>',
+    download: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12m0 0l-5-5m5 5l5-5M5 20h14"/></svg>',
+    trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>',
+  };
+
+  async function api(path, opts = {}) {
+    const res = await fetch(path, {
+      credentials: "same-origin",
+      ...opts,
+      headers: { "X-Requested-With": "fetch", ...(opts.headers || {}) },
+    });
+    if (res.status === 401 && !path.startsWith("/auth/")) { showLogin(); throw new Error("Signed out"); }
+    return res;
+  }
+
+  async function problem(res, fallback) {
+    try { const j = await res.json(); return j.title || fallback; } catch { return fallback; }
+  }
+
+  function toast(msg) {
+    const t = $("toast"); t.textContent = msg; t.classList.remove("hidden");
+    clearTimeout(toast.timer); toast.timer = setTimeout(() => t.classList.add("hidden"), 3000);
+  }
+
+  // ── Views ──
+  function showLogin() {
+    $("appView").classList.add("hidden");
+    $("loginView").classList.remove("hidden");
+    $("password").value = "";
+    $("username").focus();
+  }
+  function showApp(user) {
+    $("loginView").classList.add("hidden");
+    $("appView").classList.remove("hidden");
+    $("userName").textContent = user;
+    load();
+  }
+
+  // ── Login / logout ──
+  $("loginForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const err = $("loginError"); err.classList.add("hidden");
+    $("loginBtn").disabled = true;
+    try {
+      const res = await api("/auth/login", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: $("username").value, password: $("password").value }),
+      });
+      if (res.ok) { const j = await res.json(); showApp(j.username); return; }
+      err.textContent = res.status === 429 ? "Too many attempts. Try again in 15 minutes."
+        : await problem(res, "Sign-in failed.");
+      err.classList.remove("hidden");
+    } catch { err.textContent = "Could not reach the server."; err.classList.remove("hidden"); }
+    finally { $("loginBtn").disabled = false; }
+  });
+
+  $("logoutBtn").addEventListener("click", async () => {
+    await api("/auth/logout", { method: "POST" }).catch(() => {});
+    showLogin();
+  });
+
+  // ── List ──
+  const fmtDate = new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" });
+  const fmtDur = s => { const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), sec = s % 60;
+    return (h ? h + ":" + String(m).padStart(2, "0") : m) + ":" + String(sec).padStart(2, "0"); };
+  const fmtSize = b => b >= 1048576 ? (b / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(b / 1024)) + " KB";
+
+  async function load() {
+    const list = $("list");
+    const params = new URLSearchParams({ page: state.page, pageSize: PAGE_SIZE });
+    if (state.q) params.set("phoneNumber", state.q);
+    let data;
+    try {
+      const res = await api("/api/recordings?" + params);
+      if (!res.ok) throw new Error(await problem(res, "Could not load recordings."));
+      data = await res.json();
+    } catch (e) {
+      if (e.message !== "Signed out") { list.replaceChildren(empty(e.message || "Could not load recordings.")); }
+      return;
+    }
+    // Deleting the last item on a page leaves it empty: step back a page.
+    if (data.items.length === 0 && state.page > 1) { state.page--; return load(); }
+
+    state.total = data.totalCount;
+    $("count").textContent = data.totalCount === 1 ? "1 recording" : data.totalCount + " recordings";
+    list.replaceChildren(...(data.items.length ? data.items.map(row)
+      : [empty(state.q ? "No recordings match that number." : "No recordings yet.")]));
+
+    const pages = Math.max(1, Math.ceil(data.totalCount / PAGE_SIZE));
+    $("pager").classList.toggle("hidden", pages <= 1);
+    $("pageInfo").textContent = "Page " + state.page + " of " + pages;
+    $("prevBtn").disabled = state.page <= 1;
+    $("nextBtn").disabled = state.page >= pages;
+  }
+
+  function empty(text) { const d = document.createElement("div"); d.className = "empty"; d.textContent = text; return d; }
+
+  function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+  function row(r) {
+    const div = el("div", "row");
+    const isIn = r.direction === "in";
+    const dir = el("div", "dir " + (isIn ? "in" : "out"), isIn ? "↙" : "↗");
+    dir.title = isIn ? "Incoming" : "Outgoing";
+
+    const info = el("div");
+    info.append(el("div", "num", r.phoneNumber || "Unknown number"));
+    const meta = el("div", "meta");
+    meta.append(
+      el("span", null, fmtDate.format(new Date(r.startedAt))),
+      el("span", null, fmtDur(r.durationSeconds)),
+      el("span", "tag", r.audioSource),
+      el("span", null, fmtSize(r.sizeBytes)));
+    if (r.deviceName) meta.append(el("span", null, r.deviceName));
+    info.append(meta);
+
+    const actions = el("div", "actions");
+    const audioUrl = "/api/recordings/" + r.id + "/audio";
+
+    const play = el("button", "icon-btn"); play.type = "button"; play.innerHTML = icons.play;
+    play.title = "Play"; play.setAttribute("aria-label", "Play recording");
+    play.addEventListener("click", () => {
+      const existing = div.querySelector(".player");
+      if (existing) { existing.remove(); return; }
+      document.querySelectorAll(".player").forEach(p => p.remove()); // one player at a time
+      const p = el("div", "player"); const a = document.createElement("audio");
+      a.controls = true; a.preload = "metadata"; a.src = audioUrl; p.append(a); div.append(p);
+      a.play().catch(() => {});
+    });
+
+    const dl = el("a", "icon-btn"); dl.href = audioUrl; dl.download = r.fileName; dl.innerHTML = icons.download;
+    dl.title = "Download"; dl.setAttribute("aria-label", "Download recording");
+
+    const del = el("button", "icon-btn danger"); del.type = "button"; del.innerHTML = icons.trash;
+    del.title = "Delete"; del.setAttribute("aria-label", "Delete recording");
+    del.addEventListener("click", () => confirmDelete(r));
+
+    actions.append(play, dl, del);
+    div.append(dir, info, actions);
+    return div;
+  }
+
+  // ── Delete ──
+  let pending = null;
+  function confirmDelete(r) {
+    pending = r;
+    $("confirmText").textContent = (r.phoneNumber || "Unknown number") + " · " + fmtDate.format(new Date(r.startedAt))
+      + ". The audio file is removed from the server permanently.";
+    $("confirmDlg").showModal();
+  }
+  $("cancelDel").addEventListener("click", () => $("confirmDlg").close());
+  $("confirmDel").addEventListener("click", async () => {
+    const r = pending; $("confirmDlg").close(); if (!r) return;
+    try {
+      const res = await api("/api/recordings/" + r.id, { method: "DELETE" });
+      if (res.ok || res.status === 404) { toast("Recording deleted"); load(); }
+      else toast(await problem(res, "Delete failed."));
+    } catch (e) { if (e.message !== "Signed out") toast("Could not reach the server."); }
+  });
+
+  // ── Search / paging ──
+  let searchTimer;
+  $("search").addEventListener("input", () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => { state.q = $("search").value.trim(); state.page = 1; load(); }, 300);
+  });
+  $("prevBtn").addEventListener("click", () => { state.page--; load(); window.scrollTo(0, 0); });
+  $("nextBtn").addEventListener("click", () => { state.page++; load(); window.scrollTo(0, 0); });
+
+  // ── Start ──
+  fetch("/auth/me", { credentials: "same-origin" })
+    .then(r => r.ok ? r.json().then(j => showApp(j.username)) : showLogin())
+    .catch(showLogin);
+})();
+</script>
+</body>
+</html>

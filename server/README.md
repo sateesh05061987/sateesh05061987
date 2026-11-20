@@ -16,6 +16,23 @@ self-contained build, MySQL, config in `/etc/<app>/api.env`, deployed with `depl
 | **Recordings** | | **`/var/www/callrec/recordings/yyyy/MM/*.m4a`** |
 | Backups | `/var/www/katavu/backups/<ts>/` | `/var/www/callrec/backups/<ts>/` |
 
+## Web app
+
+`https://recordings.lilliblush.com/` lists every recording, newest first. You can search by phone number,
+play a recording in the browser, download it, or delete it (after a confirmation; this removes the file and
+its database row). It's one static page (`wwwroot/index.html`, no build step) served by this API, so it
+deploys with `deploy.sh` like everything else.
+
+- **Login:** one admin user, set with `deploy/set-admin-password.sh`. It generates a password (or set
+  `ADMIN_PASSWORD=...`, `ADMIN_USER=...`), hashes it on your PC (PBKDF2-SHA256), writes only the hash to
+  `/etc/callrec/api.env` (`Admin__Username`, `Admin__PasswordHash`) and restarts the API. Run it again to change
+  the password. Until it has been run, the web login is disabled and the phone app still works.
+- **Sessions:** an HttpOnly, Secure, SameSite=Strict cookie that lasts 12 hours (sliding). Cookie keys are kept in
+  `/var/www/callrec/recordings/.keys` (owner-only), so restarts and deploys don't sign you out.
+- **Limits:** 10 login attempts per 15 minutes per address. Requests that change data from the browser must
+  also send `X-Requested-With`.
+- The phone app keeps using `X-Api-Key`; every `/api` endpoint accepts either the key or a signed-in cookie.
+
 ## API
 
 Every `/api/*` endpoint requires the header `X-Api-Key: <Auth:ApiKey>` (401 otherwise).
