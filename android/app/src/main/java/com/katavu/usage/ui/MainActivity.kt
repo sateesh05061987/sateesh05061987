@@ -10,12 +10,12 @@ import android.text.format.DateUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.katavu.usage.R
 import com.katavu.usage.databinding.ActivityMainBinding
 import com.katavu.usage.databinding.SectionCardBinding
@@ -46,19 +46,14 @@ class MainActivity : AppCompatActivity() {
         Manifest.permission.READ_PHONE_STATE,
         Manifest.permission.READ_CALL_LOG,
     )
-    // Only prompt for the recorder once per visit, so it never nags; it clears once enabled.
-    private var recorderPrompted = false
 
     private val permissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { maybePromptRecorder() }
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { refreshSetupCard() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        // No setup card: if access is missing (e.g. after a re-install), request it automatically.
-        if (!hasAllPermissions()) permissionLauncher.launch(permissions)
 
         binding.tileToday.tileLabel.setText(R.string.logins_today)
         binding.tileWeek.tileLabel.setText(R.string.last_7_days)
@@ -67,6 +62,10 @@ class MainActivity : AppCompatActivity() {
         binding.loginsSection.sectionTitle.setText(R.string.recent_logins)
         binding.activitySection.sectionTitle.setText(R.string.recent_activity)
 
+        binding.enableServiceButton.setOnClickListener {
+            startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+        }
+        binding.permissionsButton.setOnClickListener { permissionLauncher.launch(permissions) }
         binding.swipe.setColorSchemeResources(R.color.green_deep, R.color.gold)
         binding.swipe.setOnRefreshListener { loadUsage() }
 
@@ -77,10 +76,15 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        maybePromptRecorder()
+        refreshSetupCard()
     }
 
-    // ── Recorder access (no card; prompt only when something is off) ──
+    // ── Setup card ──
+    private fun refreshSetupCard() {
+        val ready = hasAllPermissions() && isRecorderEnabled()
+        binding.setupCard.visibility = if (ready) View.GONE else View.VISIBLE
+    }
+
     private fun hasAllPermissions() = permissions.all {
         ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
     }
@@ -91,22 +95,6 @@ class MainActivity : AppCompatActivity() {
             Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES) ?: return false
         val splitter = TextUtils.SimpleStringSplitter(':').apply { setString(enabled) }
         return splitter.any { it.equals(expected, ignoreCase = true) }
-    }
-
-    /** When the recorder is off, show a one-time prompt that opens Accessibility settings. */
-    private fun maybePromptRecorder() {
-        if (!hasAllPermissions()) return // let the permission dialog finish first
-        if (isRecorderEnabled()) { recorderPrompted = false; return }
-        if (recorderPrompted) return
-        recorderPrompted = true
-        MaterialAlertDialogBuilder(this)
-            .setTitle(R.string.recorder_off_title)
-            .setMessage(R.string.recorder_off_message)
-            .setPositiveButton(R.string.open_settings) { _, _ ->
-                startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
-            }
-            .setNegativeButton(R.string.later, null)
-            .show()
     }
 
     // ── Usage ──
