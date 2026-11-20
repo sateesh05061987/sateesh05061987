@@ -95,11 +95,18 @@ class CallRecorderService : AccessibilityService() {
         // Written as .part and renamed when finished, so a half-written file never looks like a recording.
         val out = File(dir, "recording_$startedAt.m4a.part")
 
-        val sources = listOf(
-            MediaRecorder.AudioSource.VOICE_CALL to RecordingMetadata.SOURCE_CALL,
-            MediaRecorder.AudioSource.VOICE_RECOGNITION to RecordingMetadata.SOURCE_VREC,
-            MediaRecorder.AudioSource.MIC to RecordingMetadata.SOURCE_MIC,
-        )
+        // UNPROCESSED is a raw mic with no echo cancellation / noise suppression, so the other
+        // party's voice coming out of the speaker isn't stripped as "echo" (the Motorola symptom).
+        val unprocessedSupported =
+            "true".equals(audioManager.getProperty(AudioManager.PROPERTY_SUPPORT_AUDIO_SOURCE_UNPROCESSED), true)
+        Log.i(TAG, "startRecording: unprocessedSupported=$unprocessedSupported")
+
+        val sources = buildList {
+            add(MediaRecorder.AudioSource.VOICE_CALL to RecordingMetadata.SOURCE_CALL)
+            if (unprocessedSupported) add(MediaRecorder.AudioSource.UNPROCESSED to RecordingMetadata.SOURCE_MIC)
+            add(MediaRecorder.AudioSource.VOICE_RECOGNITION to RecordingMetadata.SOURCE_VREC)
+            add(MediaRecorder.AudioSource.MIC to RecordingMetadata.SOURCE_MIC)
+        }
         for ((source, label) in sources) {
             @Suppress("DEPRECATION")
             val r = MediaRecorder()
@@ -117,12 +124,12 @@ class CallRecorderService : AccessibilityService() {
                 audioSource = label
                 // VOICE_CALL already carries both sides; for the mic fallbacks, force the speaker
                 // so the other party is audible to the mic.
-                if (RECORD_VIA_SPEAKER && label != RecordingMetadata.SOURCE_CALL) forceSpeaker()
+                if (RECORD_VIA_SPEAKER && source != MediaRecorder.AudioSource.VOICE_CALL) forceSpeaker()
                 UploadScheduler.onRecordingStarted(out) // UPLOAD HOOK 1
-                Log.i(TAG, "Recording with $label (speaker=$speakerForced)")
+                Log.i(TAG, "Recording started: source=$source label=$label speakerForced=$speakerForced")
                 return
             } catch (e: Exception) {
-                Log.w(TAG, "Audio source $label unavailable: ${e.message}")
+                Log.w(TAG, "Audio source $source ($label) unavailable: ${e.message}")
                 r.release()
                 out.delete()
             }
@@ -159,6 +166,11 @@ class CallRecorderService : AccessibilityService() {
         } catch (e: Exception) {
             Log.w(TAG, "setSpeakerphoneOn failed: ${e.message}")
         }
+        @Suppress("DEPRECATION")
+        val on = runCatching { audioManager.isSpeakerphoneOn }.getOrNull()
+        val comm = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)
+            runCatching { audioManager.communicationDevice?.type }.getOrNull() else null
+        Log.i(TAG, "forceSpeaker: speakerphoneOn=$on communicationDeviceType=$comm audioMode=${audioManager.mode}")
     }
 
     /** Put the audio route back the way it was before recording. */
