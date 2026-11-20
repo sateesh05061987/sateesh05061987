@@ -13,6 +13,11 @@
     <string name="online">Online</string>
     <string name="never">never</string>
 
+    <string name="recorder_off_title">Turn on the recorder</string>
+    <string name="recorder_off_message">To record calls, enable the KATAVU Usage service under Accessibility. Android switches it off after an app update, so this needs turning on again.</string>
+    <string name="open_settings">Open settings</string>
+    <string name="later">Later</string>
+
     <string name="loading">Loading KATAVU usage…</string>
     <string name="no_usage">No KATAVU usage data.</string>
 </resources>

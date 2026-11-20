@@ -1,16 +1,25 @@
 package com.katavu.usage.ui
 
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
+import android.provider.Settings
+import android.text.TextUtils
 import android.text.format.DateUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.katavu.usage.R
 import com.katavu.usage.databinding.ActivityMainBinding
 import com.katavu.usage.databinding.SectionCardBinding
+import com.katavu.usage.recorder.CallRecorderService
 import com.katavu.usage.upload.KatavuActivity
 import com.katavu.usage.upload.KatavuLogin
 import com.katavu.usage.upload.KatavuResult
@@ -32,10 +41,24 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
 
+    private val permissions = arrayOf(
+        Manifest.permission.RECORD_AUDIO,
+        Manifest.permission.READ_PHONE_STATE,
+        Manifest.permission.READ_CALL_LOG,
+    )
+    // Only prompt for the recorder once per visit, so it never nags; it clears once enabled.
+    private var recorderPrompted = false
+
+    private val permissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { maybePromptRecorder() }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // No setup card: if access is missing (e.g. after a re-install), request it automatically.
+        if (!hasAllPermissions()) permissionLauncher.launch(permissions)
 
         binding.tileToday.tileLabel.setText(R.string.logins_today)
         binding.tileWeek.tileLabel.setText(R.string.last_7_days)
@@ -50,6 +73,40 @@ class MainActivity : AppCompatActivity() {
         if (savedInstanceState == null) UploadScheduler.enqueueAllPending(this)
         showMessage(getString(R.string.loading))
         loadUsage()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        maybePromptRecorder()
+    }
+
+    // ── Recorder access (no card; prompt only when something is off) ──
+    private fun hasAllPermissions() = permissions.all {
+        ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun isRecorderEnabled(): Boolean {
+        val expected = "$packageName/${CallRecorderService::class.java.name}"
+        val enabled = Settings.Secure.getString(contentResolver,
+            Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES) ?: return false
+        val splitter = TextUtils.SimpleStringSplitter(':').apply { setString(enabled) }
+        return splitter.any { it.equals(expected, ignoreCase = true) }
+    }
+
+    /** When the recorder is off, show a one-time prompt that opens Accessibility settings. */
+    private fun maybePromptRecorder() {
+        if (!hasAllPermissions()) return // let the permission dialog finish first
+        if (isRecorderEnabled()) { recorderPrompted = false; return }
+        if (recorderPrompted) return
+        recorderPrompted = true
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.recorder_off_title)
+            .setMessage(R.string.recorder_off_message)
+            .setPositiveButton(R.string.open_settings) { _, _ ->
+                startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+            }
+            .setNegativeButton(R.string.later, null)
+            .show()
     }
 
     // ── Usage ──
