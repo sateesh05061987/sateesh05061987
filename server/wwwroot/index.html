@@ -52,6 +52,13 @@
   .user { color: var(--muted); font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .btn-ghost { background: transparent; color: var(--text); border: 1px solid var(--border); padding: 7px 12px; }
   main { max-width: 1000px; margin: 0 auto; padding: 16px; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 16px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+  .stat .v { font-size: 24px; font-weight: 700; color: var(--green-deep); }
+  .stat .l { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  .stat .s { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .stat.hero { background: var(--green-deep); border-color: var(--green-deep); }
+  .stat.hero .v { color: #fff; } .stat.hero .l, .stat.hero .s { color: #cfe8d6; }
   .tools { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
   .tools input { flex: 1; min-width: 180px; }
   .count { color: var(--muted); font-size: 14px; }
@@ -120,6 +127,7 @@
     </div>
   </header>
   <main>
+    <div id="stats" class="stats hidden"></div>
     <div class="tools">
       <input id="search" type="search" placeholder="Search phone number" inputmode="tel" aria-label="Search phone number">
       <span id="count" class="count"></span>
@@ -186,8 +194,32 @@
     $("loginView").classList.add("hidden");
     $("appView").classList.remove("hidden");
     $("userName").textContent = user;
+    loadStats();
     load();
   }
+
+  // ── Usage summary ──
+  async function loadStats() {
+    let s;
+    try {
+      const res = await api("/api/stats");
+      if (!res.ok) return;
+      s = await res.json();
+    } catch { return; }
+    if (!s || s.totalCount === 0) { $("stats").classList.add("hidden"); return; }
+    const stat = (v, l, sub, hero) =>
+      `<div class="stat${hero ? " hero" : ""}"><div class="v">${v}</div><div class="l">${l}</div>${sub ? `<div class="s">${sub}</div>` : ""}</div>`;
+    $("stats").innerHTML =
+      stat(s.totalCount.toLocaleString(), "Total calls", null, true) +
+      stat(fmtDurLong(s.totalDurationSeconds), "Talk time") +
+      stat(s.incoming.toLocaleString(), "Incoming") +
+      stat(s.outgoing.toLocaleString(), "Outgoing") +
+      stat(s.thisMonthCount.toLocaleString(), "This month", fmtDurLong(s.thisMonthDurationSeconds)) +
+      stat(fmtSize(s.totalBytes), "Stored");
+    $("stats").classList.remove("hidden");
+  }
+  const fmtDurLong = sec => { const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60);
+    return h > 0 ? h + "h " + m + "m" : (m > 0 ? m + "m " + (sec % 60) + "s" : sec + "s"); };
 
   // ── Login / logout ──
   $("loginForm").addEventListener("submit", async e => {
@@ -306,7 +338,7 @@
     const r = pending; $("confirmDlg").close(); if (!r) return;
     try {
       const res = await api("/api/recordings/" + r.id, { method: "DELETE" });
-      if (res.ok || res.status === 404) { toast("Recording deleted"); load(); }
+      if (res.ok || res.status === 404) { toast("Recording deleted"); loadStats(); load(); }
       else toast(await problem(res, "Delete failed."));
     } catch (e) { if (e.message !== "Signed out") toast("Could not reach the server."); }
   });

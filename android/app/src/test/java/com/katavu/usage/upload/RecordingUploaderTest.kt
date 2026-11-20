@@ -48,8 +48,10 @@ class RecordingUploaderTest {
     @After
     fun tearDown() = server.shutdown()
 
-    private fun baseUrl() = server.url("/").toString().replace("127.0.0.1", "localhost")
-        .let { UploadSettings.parseServerUrl(it)!! }
+    // Force host=localhost (the cert's SAN) whatever MockWebServer bound to (127.0.0.1 on CI,
+    // kubernetes.docker.internal on some dev machines), so TLS hostname verification passes.
+    private fun baseUrl() = AppConfig.parseServerUrl(
+        server.url("/").newBuilder().host("localhost").build().toString())!!
 
     @Test
     fun `sends multipart form with api key and all fields`() {
@@ -114,9 +116,9 @@ class RecordingUploaderTest {
 
     @Test
     fun `http urls are refused`() {
-        assertNull(UploadSettings.parseServerUrl("http://example.com"))
-        assertNull(UploadSettings.parseServerUrl("example.com"))
-        assertEquals("https://example.com/sub", UploadSettings.parseServerUrl("https://example.com/sub/")!!.toString())
+        assertNull(AppConfig.parseServerUrl("http://example.com"))
+        assertNull(AppConfig.parseServerUrl("example.com"))
+        assertEquals("https://example.com/sub", AppConfig.parseServerUrl("https://example.com/sub/")!!.toString())
         val file = tmp.newFile("a.m4a")
         assertTrue(uploader.upload("http://example.com/".toHttpUrl(), "k", file, meta, "d") is UploadOutcome.Failure)
     }

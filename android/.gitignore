@@ -7,3 +7,5 @@ local.properties
 captures/
 *.keystore
 *.jks
+apikey.properties
+make-icons.mjs

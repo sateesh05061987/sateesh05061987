@@ -1,0 +1,3 @@
+
+# Built APK embeds the baked API key — never commit to the public repo.
+*.apk

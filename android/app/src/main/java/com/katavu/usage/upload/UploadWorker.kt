@@ -19,11 +19,10 @@ class UploadWorker(context: Context, params: WorkerParameters) : CoroutineWorker
         val entry = store.get(fileName) ?: return@withContext Result.failure()
         if (entry.status == UploadStatus.UPLOADED) return@withContext Result.success()
 
-        val settings = UploadSettings(applicationContext)
-        val baseUrl = settings.baseUrl
-        if (baseUrl == null || settings.apiKey.isBlank()) {
-            // Stay pending: saving the settings re-enqueues everything that is not uploaded.
-            store.update(fileName) { it.copy(status = UploadStatus.PENDING, lastError = "Server not configured") }
+        val baseUrl = AppConfig.baseUrl
+        if (baseUrl == null || AppConfig.apiKey.isBlank()) {
+            // Only happens if the APK was built without apikey.properties.
+            store.update(fileName) { it.copy(status = UploadStatus.PENDING, lastError = "App was built without a server URL/key") }
             return@withContext Result.failure()
         }
 
@@ -35,9 +34,9 @@ class UploadWorker(context: Context, params: WorkerParameters) : CoroutineWorker
 
         store.update(fileName) { it.copy(status = UploadStatus.UPLOADING, attempts = it.attempts + 1) }
 
-        when (val outcome = RecordingUploader().upload(baseUrl, settings.apiKey, file, entry.meta, deviceName())) {
+        when (val outcome = RecordingUploader().upload(baseUrl, AppConfig.apiKey, file, entry.meta, deviceName())) {
             is UploadOutcome.Success -> {
-                val deleted = settings.deleteAfterUpload && file.delete()
+                val deleted = AppConfig.DELETE_AFTER_UPLOAD && file.delete()
                 store.update(fileName) {
                     it.copy(
                         status = UploadStatus.UPLOADED,

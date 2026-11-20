@@ -1,3 +1,19 @@
-<resources>
-    <style name="Theme.KatavuUsage" parent="Theme.Material3.DayNight" />
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- KATAVU green/gold on a light shell (KATAVU's app is light-only). -->
+    <style name="Theme.KatavuUsage" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">@color/green_deep</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryContainer">@color/green_leaf_light</item>
+        <item name="colorOnPrimaryContainer">@color/green_deep_dark</item>
+        <item name="colorSecondary">@color/gold</item>
+        <item name="colorOnSecondary">#FFFFFF</item>
+        <item name="colorSecondaryContainer">@color/gold_light</item>
+        <item name="colorOnSecondaryContainer">#5A4300</item>
+        <item name="android:statusBarColor">@color/green_deep</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+    <style name="Theme.KatavuUsage.Toolbar" parent="Widget.Material3.Toolbar.Surface">
+        <item name="android:background">@color/green_deep</item>
+        <item name="titleTextColor">#FFFFFF</item>
+    </style>
 </resources>

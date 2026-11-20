@@ -45,6 +45,7 @@ Every `/api/*` endpoint requires the header `X-Api-Key: <Auth:ApiKey>` (401 othe
 | `GET` | `/api/recordings/{id}/audio` | Streams the file (`audio/mp4`, supports `Range` for seeking). |
 | `DELETE` | `/api/recordings/{id}` | Deletes the row and the file. 204. |
 | `GET` | `/api/ping` | Used by the app's "Test connection" button. |
+| `GET` | `/api/stats` | Usage summary (totals, in/out, this month, last-30-days per day, top numbers) for the phone and web dashboards. |
 | `GET` | `/healthz` | Unauthenticated health check. |
 
 Upload checks: size limit (`Storage:MaxUploadBytes`, default 200 MB, enforced at Kestrel and in the

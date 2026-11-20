@@ -29,6 +29,8 @@ public static class RecordingEndpoints
         // Used by the app's "Test connection" button: proves URL, TLS and API key are all good.
         api.MapGet("/ping", () => Results.Ok(new { status = "ok", serverTime = DateTimeOffset.UtcNow }));
 
+        api.MapGet("/stats", StatsEndpoints.Get);
+
         var recordings = api.MapGroup("/recordings");
         recordings.MapPost("/", Upload);
         recordings.MapGet("/", List);

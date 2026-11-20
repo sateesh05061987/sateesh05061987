@@ -1,4 +1,12 @@
 <resources>
+    <!-- KATAVU palette (deep sugarcane green / leaf green / agricultural gold). -->
+    <color name="green_deep">#0F6B3A</color>
+    <color name="green_deep_dark">#09552D</color>
+    <color name="green_leaf">#4CAF50</color>
+    <color name="green_leaf_light">#E8F5E9</color>
+    <color name="gold">#D4A017</color>
+    <color name="gold_light">#FBF2DC</color>
+
     <color name="status_pending">#8A6D00</color>
     <color name="status_uploaded">#1B7F3B</color>
     <color name="status_failed">#B3261E</color>

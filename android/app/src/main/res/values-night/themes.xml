@@ -1,0 +1,13 @@
+<resources>
+    <!-- KATAVU is a light brand; keep the light shell even in dark mode for brand consistency. -->
+    <style name="Theme.KatavuUsage" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">@color/green_deep</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryContainer">@color/green_leaf_light</item>
+        <item name="colorOnPrimaryContainer">@color/green_deep_dark</item>
+        <item name="colorSecondary">@color/gold</item>
+        <item name="colorOnSecondary">#FFFFFF</item>
+        <item name="android:statusBarColor">@color/green_deep</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

@@ -8,6 +8,25 @@ KATAVU Usage: a sideloaded call recorder (minSdk 26, package `com.katavu.usage`)
 > `app/src/main/java/com/katavu/usage/upload/` and needs only two calls from a recorder.
 > See [Merging into your existing app](#merging-into-your-existing-app).
 
+## Configuration (hardcoded)
+
+The server URL and API key are baked into the APK at build time, so there is **no in-app settings
+screen**. They come from `android/apikey.properties` (git-ignored, so the key never reaches the public
+repo); `apikey.properties.sample` shows the shape, and the URL also has a default in `app/build.gradle.kts`:
+
+```
+API_KEY=<the server API key>
+SERVER_URL=https://recordings.lilliblush.com
+```
+
+The key ends up in the APK, so anyone who has the APK can read it — fine for a private sideloaded app,
+but don't share the APK. To rotate: change `Auth__ApiKey` on the server (`deploy/set-admin-password.sh`
+is for the web login; the API key is in `/etc/callrec/api.env`), update `apikey.properties`, rebuild.
+
+The app icon and colours are KATAVU's (deep green / gold, sugarcane-bunch launcher icon). The launcher
+icons are generated from KATAVU's `katavu-icon.svg`; `make-icons.mjs` (git-ignored, machine-specific
+paths) regenerates them with `sharp`.
+
 ## What it does
 
 - **Settings** (toolbar → Settings): server URL, API key, "delete local copy after upload",
@@ -16,8 +35,10 @@ KATAVU Usage: a sideloaded call recorder (minSdk 26, package `com.katavu.usage`)
   connection, exponential backoff from 30 s) POSTs the file as `multipart/form-data` to
   `{serverUrl}/api/recordings` with header `X-Api-Key` and fields `file, direction, phoneNumber,
   startedAt (ISO 8601 with offset), durationSeconds, audioSource, deviceName`.
-- **Status** is kept per file in `filesDir/upload_state.json` and shown in the list as
-  Pending / Uploading / Uploaded / Failed, with the last error. Tap a pending or failed item to retry now.
+- **Status** is kept per file in `filesDir/upload_state.json` (used for the sync line on the dashboard).
+- **Usage dashboard** is the home screen: total calls, talk time, incoming vs outgoing, calls this
+  month, a last-30-days activity chart, top numbers and storage used, from the server (`GET /api/stats`).
+  The per-call list and delete live in the web app, not the phone.
 - **On app open** recordings on disk with no entry yet are registered (metadata parsed from the
   file name, or estimated from the file) and everything not yet uploaded is queued.
 - **HTTPS only**: `usesCleartextTraffic=false`, a network security config with

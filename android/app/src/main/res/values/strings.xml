@@ -1,25 +1,19 @@
 <resources>
     <string name="app_name">KATAVU Usage</string>
     <string name="accessibility_description">KATAVU Usage records phone calls and uploads them to the KATAVU Usage server.</string>
-    <string name="settings_title">Upload settings</string>
-    <string name="action_settings">Settings</string>
-    <string name="server_url">Server URL</string>
-    <string name="server_url_hint">https://recordings.lilliblush.com</string>
-    <string name="api_key">API key</string>
-    <string name="delete_after_upload">Delete local copy after a successful upload</string>
-    <string name="save">Save</string>
-    <string name="test_connection">Test connection</string>
-    <string name="testing">Testing…</string>
-    <string name="saved">Saved. Pending recordings queued for upload.</string>
-    <string name="error_https_required">Enter a valid https:// URL. Plain http is not allowed.</string>
-    <string name="error_api_key_required">Enter the API key.</string>
+
     <string name="enable_service">Enable recorder</string>
     <string name="grant_permissions">Grant permissions</string>
-    <string name="no_recordings">No recordings yet.</string>
-    <string name="server_not_configured">Upload server not set. Open Settings to configure it.</string>
-    <string name="retry_upload">Retry upload</string>
-    <string name="status_pending">Pending</string>
-    <string name="status_uploading">Uploading…</string>
-    <string name="status_uploaded">Uploaded</string>
-    <string name="status_failed">Failed</string>
+    <string name="setup_hint">Finish setup: grant the call and microphone permissions, then turn on the KATAVU Usage recorder service.</string>
+
+    <string name="total_calls">Total calls</string>
+    <string name="total_talk_time">Talk time</string>
+    <string name="calls_in">Incoming</string>
+    <string name="calls_out">Outgoing</string>
+    <string name="this_month">This month</string>
+    <string name="last_30_days">Last 30 days</string>
+    <string name="top_numbers">Top numbers</string>
+
+    <string name="loading">Loading usage…</string>
+    <string name="no_usage">No recordings yet. Make a call to see usage here.</string>
 </resources>

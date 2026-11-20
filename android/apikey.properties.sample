@@ -1,0 +1,4 @@
+# Copy to apikey.properties (git-ignored) and fill in. Baked into the APK at build time.
+# The URL has a safe default in build.gradle.kts; override it here only if it changes.
+API_KEY=your-server-api-key
+SERVER_URL=https://recordings.lilliblush.com
