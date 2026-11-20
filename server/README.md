@@ -45,7 +45,8 @@ Every `/api/*` endpoint requires the header `X-Api-Key: <Auth:ApiKey>` (401 othe
 | `GET` | `/api/recordings/{id}/audio` | Streams the file (`audio/mp4`, supports `Range` for seeking). |
 | `DELETE` | `/api/recordings/{id}` | Deletes the row and the file. 204. |
 | `GET` | `/api/ping` | Used by the app's "Test connection" button. |
-| `GET` | `/api/stats` | Usage summary (totals, in/out, this month, last-30-days per day, top numbers) for the phone and web dashboards. |
+| `GET` | `/api/stats` | Call-recording summary (totals, in/out, this month, last-30-days per day, top numbers) for the web dashboard. |
+| `GET` | `/api/katavu/usage` | **KATAVU** app usage (users + last login + signed-in, recent logins, recent activity) for the phone dashboard. Reads KATAVU's own DB read-only; 503 if not configured. |
 | `GET` | `/healthz` | Unauthenticated health check. |
 
 Upload checks: size limit (`Storage:MaxUploadBytes`, default 200 MB, enforced at Kestrel and in the
@@ -57,6 +58,22 @@ AudioSource, DeviceName, SizeBytes, FileHash, UploadedAt`. `RelativePath` (where
 the storage root) and `FileHash` (for duplicate detection) are additions to the columns you listed.
 MySQL has no offset-aware date type, so `startedAt` / `uploadedAt` are stored and returned in UTC
 (`09:30+05:30` comes back as `04:00+00:00`, the same moment).
+
+## KATAVU usage dashboard
+
+The phone app's home screen shows **KATAVU** usage (who signs in to KATAVU and what they do). The
+server reads this from KATAVU's own MySQL database (`katavu`) through a **read-only** user, so it can
+never change KATAVU data. On the VPS this is set up as:
+
+```sql
+CREATE USER 'callrec_ro'@'127.0.0.1' IDENTIFIED BY '<random>';
+GRANT SELECT ON katavu.* TO 'callrec_ro'@'127.0.0.1';
+```
+
+and a connection string `ConnectionStrings__Katavu` in `/etc/callrec/api.env`. No passwords, tokens,
+emails or phone numbers are read — only names, usernames, roles, organizations, login times and the
+audit trail. If `ConnectionStrings:Katavu` is absent, `/api/katavu/usage` returns 503 and the rest of
+the server is unaffected.
 
 ## Configuration
 

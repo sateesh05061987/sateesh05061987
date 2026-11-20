@@ -6,14 +6,16 @@
     <string name="grant_permissions">Grant permissions</string>
     <string name="setup_hint">Finish setup: grant the call and microphone permissions, then turn on the KATAVU Usage recorder service.</string>
 
-    <string name="total_calls">Total calls</string>
-    <string name="total_talk_time">Talk time</string>
-    <string name="calls_in">Incoming</string>
-    <string name="calls_out">Outgoing</string>
-    <string name="this_month">This month</string>
-    <string name="last_30_days">Last 30 days</string>
-    <string name="top_numbers">Top numbers</string>
+    <string name="signed_in_now">signed in now</string>
+    <string name="logins_today">Logins today</string>
+    <string name="last_7_days">Logins (7 days)</string>
+    <string name="organizations">Organizations</string>
+    <string name="users">Users</string>
+    <string name="recent_logins">Recent logins</string>
+    <string name="recent_activity">Recent activity</string>
+    <string name="online">Online</string>
+    <string name="never">never</string>
 
-    <string name="loading">Loading usage…</string>
-    <string name="no_usage">No recordings yet. Make a call to see usage here.</string>
+    <string name="loading">Loading KATAVU usage…</string>
+    <string name="no_usage">No KATAVU usage data.</string>
 </resources>
