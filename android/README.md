@@ -99,3 +99,11 @@ The app trusts the system CAs, so the Let's Encrypt certificate that certbot get
 `recorder/CallRecorderService.kt` follows the phone state broadcast and records with the first
 audio source that starts (VOICE_CALL → VOICE_RECOGNITION → MIC). It writes `*.m4a.part` and renames
 when done. On most modern phones VOICE_CALL is not available to normal apps, so expect VREC/MIC.
+
+**Both sides of the call.** Since Android 10, a non-system app cannot capture the other party's
+audio directly (VOICE_CALL is blocked), so the microphone hears only your side. To capture both
+sides anyway, when it falls back to the mic the service turns the call onto the **loudspeaker** so
+the mic picks up the other party too, and restores the previous audio route when the call ends
+(`RECORD_VIA_SPEAKER`, on by default; set it to `false` to record your side only). This means calls
+are recorded on speaker. Device/OEM policies can still block or override call-audio routing — the
+only way to get a true, private both-sides recording is the phone's built-in (system) call recorder.

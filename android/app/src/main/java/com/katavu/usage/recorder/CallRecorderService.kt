@@ -5,7 +5,10 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.media.AudioDeviceInfo
+import android.media.AudioManager
 import android.media.MediaRecorder
+import android.os.Build
 import android.telephony.TelephonyManager
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
@@ -21,8 +24,19 @@ import java.io.File
  *
  * Follows the phone state and records with the first audio source that starts:
  * VOICE_CALL (CALL), then VOICE_RECOGNITION (VREC), then MIC.
+ *
+ * BOTH SIDES: since Android 10 a non-system app can't capture the other party's voice directly
+ * (VOICE_CALL is blocked for normal apps). To still get both sides, when it falls back to the mic
+ * it forces the call onto the loudspeaker so the mic hears the other party too, and restores the
+ * previous audio route when the call ends. Set [RECORD_VIA_SPEAKER] to false to turn that off
+ * (then only your own side is recorded).
  */
 class CallRecorderService : AccessibilityService() {
+
+    private val audioManager by lazy { getSystemService(AUDIO_SERVICE) as AudioManager }
+    private var speakerForced = false
+    private var savedSpeakerOn: Boolean? = null
+    private var savedCommDevice: AudioDeviceInfo? = null
 
     private var recorder: MediaRecorder? = null
     private var partFile: File? = null
@@ -101,8 +115,11 @@ class CallRecorderService : AccessibilityService() {
                 recorder = r
                 partFile = out
                 audioSource = label
+                // VOICE_CALL already carries both sides; for the mic fallbacks, force the speaker
+                // so the other party is audible to the mic.
+                if (RECORD_VIA_SPEAKER && label != RecordingMetadata.SOURCE_CALL) forceSpeaker()
                 UploadScheduler.onRecordingStarted(out) // UPLOAD HOOK 1
-                Log.i(TAG, "Recording with $label")
+                Log.i(TAG, "Recording with $label (speaker=$speakerForced)")
                 return
             } catch (e: Exception) {
                 Log.w(TAG, "Audio source $label unavailable: ${e.message}")
@@ -113,7 +130,47 @@ class CallRecorderService : AccessibilityService() {
         Log.e(TAG, "No audio source could be started")
     }
 
+    /** Route call audio to the loudspeaker so the mic captures the other party too. */
+    private fun forceSpeaker() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val speaker = audioManager.availableCommunicationDevices
+                    .firstOrNull { it.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER } ?: return
+                savedCommDevice = audioManager.communicationDevice
+                speakerForced = audioManager.setCommunicationDevice(speaker)
+            } else {
+                @Suppress("DEPRECATION")
+                savedSpeakerOn = audioManager.isSpeakerphoneOn
+                @Suppress("DEPRECATION")
+                audioManager.isSpeakerphoneOn = true
+                speakerForced = true
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Could not switch to speaker: ${e.message}")
+        }
+    }
+
+    /** Put the audio route back the way it was before recording. */
+    private fun restoreAudioRoute() {
+        if (!speakerForced) return
+        speakerForced = false
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                audioManager.clearCommunicationDevice()
+                savedCommDevice?.let { audioManager.setCommunicationDevice(it) }
+                savedCommDevice = null
+            } else {
+                @Suppress("DEPRECATION")
+                savedSpeakerOn?.let { audioManager.isSpeakerphoneOn = it }
+                savedSpeakerOn = null
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Could not restore audio route: ${e.message}")
+        }
+    }
+
     private fun stopRecording() {
+        restoreAudioRoute()
         val r = recorder ?: return
         val part = partFile
         recorder = null
@@ -151,5 +208,8 @@ class CallRecorderService : AccessibilityService() {
 
     companion object {
         private const val TAG = "CallRecorderService"
+
+        /** Force the loudspeaker during mic recording so both sides are captured. */
+        private const val RECORD_VIA_SPEAKER = true
     }
 }
