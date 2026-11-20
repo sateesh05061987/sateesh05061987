@@ -35,11 +35,10 @@ paths) regenerates them with `sharp`.
   connection, exponential backoff from 30 s) POSTs the file as `multipart/form-data` to
   `{serverUrl}/api/recordings` with header `X-Api-Key` and fields `file, direction, phoneNumber,
   startedAt (ISO 8601 with offset), durationSeconds, audioSource, deviceName`.
-- **Status** is kept per file in `filesDir/upload_state.json`.
-- **KATAVU usage dashboard** is the home screen: it shows **KATAVU** app usage — users with their
-  role, organization, last login and whether they're signed in; recent logins; and recent activity —
-  from the server (`GET /api/katavu/usage`, which reads KATAVU's database read-only). The app records
-  and uploads calls in the background, but call recordings are managed in the web app, not shown here.
+- **Status** is kept per file in `filesDir/upload_state.json` (used for the sync line on the dashboard).
+- **Usage dashboard** is the home screen: total calls, talk time, incoming vs outgoing, calls this
+  month, a last-30-days activity chart, top numbers and storage used, from the server (`GET /api/stats`).
+  The per-call list and delete live in the web app, not the phone.
 - **On app open** recordings on disk with no entry yet are registered (metadata parsed from the
   file name, or estimated from the file) and everything not yet uploaded is queued.
 - **HTTPS only**: `usesCleartextTraffic=false`, a network security config with

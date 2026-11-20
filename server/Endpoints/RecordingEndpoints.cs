@@ -30,7 +30,6 @@ public static class RecordingEndpoints
         api.MapGet("/ping", () => Results.Ok(new { status = "ok", serverTime = DateTimeOffset.UtcNow }));
 
         api.MapGet("/stats", StatsEndpoints.Get);
-        api.MapGet("/katavu/usage", KatavuUsageEndpoints.Get);
 
         var recordings = api.MapGroup("/recordings");
         recordings.MapPost("/", Upload);

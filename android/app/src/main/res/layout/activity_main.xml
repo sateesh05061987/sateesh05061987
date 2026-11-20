@@ -47,6 +47,7 @@
                         android:padding="14dp">
 
                         <TextView
+                            android:id="@+id/setupText"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="@string/setup_hint"
@@ -80,7 +81,7 @@
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- Hero: signed in now -->
+                <!-- Hero: total calls + total talk time -->
                 <com.google.android.material.card.MaterialCardView
                     style="@style/Widget.Material3.CardView.Filled"
                     android:layout_width="match_parent"
@@ -91,28 +92,56 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
+                        android:orientation="horizontal"
                         android:padding="18dp">
 
-                        <TextView
-                            android:id="@+id/signedIn"
-                            android:layout_width="wrap_content"
+                        <LinearLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:text="—"
-                            android:textColor="#FFFFFF"
-                            android:textSize="38sp"
-                            android:textStyle="bold" />
+                            android:layout_weight="1"
+                            android:orientation="vertical">
 
-                        <TextView
-                            android:id="@+id/signedInSub"
-                            android:layout_width="wrap_content"
+                            <TextView
+                                android:id="@+id/totalCalls"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="—"
+                                android:textColor="#FFFFFF"
+                                android:textSize="34sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/total_calls"
+                                android:textColor="#CFE8D6" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:text="@string/signed_in_now"
-                            android:textColor="#CFE8D6" />
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/totalTime"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="—"
+                                android:textColor="#FFFFFF"
+                                android:textSize="34sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/total_talk_time"
+                                android:textColor="#CFE8D6" />
+                        </LinearLayout>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- Tiles: logins today / 7d / organizations -->
+                <!-- Stat tiles: in / out / this month -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -120,26 +149,88 @@
                     android:baselineAligned="false"
                     android:orientation="horizontal">
 
-                    <include layout="@layout/stat_tile" android:id="@+id/tileToday"
+                    <include layout="@layout/stat_tile" android:id="@+id/tileIn"
                         android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" />
 
                     <Space android:layout_width="10dp" android:layout_height="1dp" />
 
-                    <include layout="@layout/stat_tile" android:id="@+id/tileWeek"
+                    <include layout="@layout/stat_tile" android:id="@+id/tileOut"
                         android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" />
 
                     <Space android:layout_width="10dp" android:layout_height="1dp" />
 
-                    <include layout="@layout/stat_tile" android:id="@+id/tileOrgs"
+                    <include layout="@layout/stat_tile" android:id="@+id/tileMonth"
                         android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" />
                 </LinearLayout>
 
-                <include layout="@layout/section_card" android:id="@+id/usersSection"
-                    android:layout_width="match_parent" android:layout_height="wrap_content" />
-                <include layout="@layout/section_card" android:id="@+id/loginsSection"
-                    android:layout_width="match_parent" android:layout_height="wrap_content" />
-                <include layout="@layout/section_card" android:id="@+id/activitySection"
-                    android:layout_width="match_parent" android:layout_height="wrap_content" />
+                <!-- Last 30 days chart -->
+                <com.google.android.material.card.MaterialCardView
+                    style="@style/Widget.Material3.CardView.Outlined"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    app:cardElevation="0dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/last_30_days"
+                            android:textAppearance="?attr/textAppearanceTitleSmall" />
+
+                        <com.katavu.usage.ui.BarChartView
+                            android:id="@+id/chart"
+                            android:layout_width="match_parent"
+                            android:layout_height="72dp"
+                            android:layout_marginTop="12dp" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Top numbers -->
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/topCard"
+                    style="@style/Widget.Material3.CardView.Outlined"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:visibility="gone"
+                    app:cardElevation="0dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/top_numbers"
+                            android:textAppearance="?attr/textAppearanceTitleSmall" />
+
+                        <LinearLayout
+                            android:id="@+id/topList"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="6dp"
+                            android:orientation="vertical" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Footer: storage + sync status -->
+                <TextView
+                    android:id="@+id/footer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:gravity="center"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="?android:attr/textColorSecondary" />
 
                 <TextView
                     android:id="@+id/message"
