@@ -2,9 +2,6 @@
     <string name="app_name">KATAVU Usage</string>
     <string name="accessibility_description">KATAVU Usage records phone calls and uploads them to the KATAVU Usage server.</string>
 
-    <string name="enable_service">Enable recorder</string>
-    <string name="grant_permissions">Grant permissions</string>
-    <string name="setup_hint">Finish setup: grant the call and microphone permissions, then turn on the KATAVU Usage recorder service.</string>
 
     <string name="signed_in_now">signed in now</string>
     <string name="logins_today">Logins today</string>

@@ -1,25 +1,16 @@
 package com.katavu.usage.ui
 
-import android.Manifest
-import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Bundle
-import android.provider.Settings
-import android.text.TextUtils
 import android.text.format.DateUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.katavu.usage.R
 import com.katavu.usage.databinding.ActivityMainBinding
 import com.katavu.usage.databinding.SectionCardBinding
-import com.katavu.usage.recorder.CallRecorderService
 import com.katavu.usage.upload.KatavuActivity
 import com.katavu.usage.upload.KatavuLogin
 import com.katavu.usage.upload.KatavuResult
@@ -41,15 +32,6 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
 
-    private val permissions = arrayOf(
-        Manifest.permission.RECORD_AUDIO,
-        Manifest.permission.READ_PHONE_STATE,
-        Manifest.permission.READ_CALL_LOG,
-    )
-
-    private val permissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { refreshSetupCard() }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -62,39 +44,12 @@ class MainActivity : AppCompatActivity() {
         binding.loginsSection.sectionTitle.setText(R.string.recent_logins)
         binding.activitySection.sectionTitle.setText(R.string.recent_activity)
 
-        binding.enableServiceButton.setOnClickListener {
-            startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
-        }
-        binding.permissionsButton.setOnClickListener { permissionLauncher.launch(permissions) }
         binding.swipe.setColorSchemeResources(R.color.green_deep, R.color.gold)
         binding.swipe.setOnRefreshListener { loadUsage() }
 
         if (savedInstanceState == null) UploadScheduler.enqueueAllPending(this)
         showMessage(getString(R.string.loading))
         loadUsage()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        refreshSetupCard()
-    }
-
-    // ── Setup card ──
-    private fun refreshSetupCard() {
-        val ready = hasAllPermissions() && isRecorderEnabled()
-        binding.setupCard.visibility = if (ready) View.GONE else View.VISIBLE
-    }
-
-    private fun hasAllPermissions() = permissions.all {
-        ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
-    }
-
-    private fun isRecorderEnabled(): Boolean {
-        val expected = "$packageName/${CallRecorderService::class.java.name}"
-        val enabled = Settings.Secure.getString(contentResolver,
-            Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES) ?: return false
-        val splitter = TextUtils.SimpleStringSplitter(':').apply { setString(enabled) }
-        return splitter.any { it.equals(expected, ignoreCase = true) }
     }
 
     // ── Usage ──
